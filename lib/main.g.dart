@@ -41,3 +41,25 @@ Map<String, dynamic> _$TokenToJson(Token instance) => <String, dynamic>{
       'tsupply': instance.tsupply,
       'msupply': instance.msupply,
     };
+
+Market _$MarketFromJson(Map<String, dynamic> json) => Market(
+      name: json['name'],
+      base: json['base'],
+      quote: json['quote'],
+      price: json['price'],
+      price_usd: json['price_usd'],
+      volume: json['volume'],
+      volume_usd: json['volume_usd'],
+      time: json['time'],
+    );
+
+Map<String, dynamic> _$MarketToJson(Market instance) => <String, dynamic>{
+      'name': instance.name,
+      'base': instance.base,
+      'quote': instance.quote,
+      'price': instance.price,
+      'price_usd': instance.price_usd,
+      'volume': instance.volume,
+      'volume_usd': instance.volume_usd,
+      'time': instance.time,
+    };

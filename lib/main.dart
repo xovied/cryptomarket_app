@@ -5,10 +5,14 @@ import 'package:flutter/gestures.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'dart:io';
+
+//import 'injectable.dart';
 
 part 'main.g.dart';
 
 void main() {
+  //configureDependencies();
   runApp(const MyApp());
 }
 
@@ -59,7 +63,7 @@ class HomeScreenState extends State<HomeScreen> {
       try {
         final rating = await WebClient().getRating(_start, widget._limit);
 
-        _tokenList = rating;
+        _tokenList = rating as List<Token>;
       } catch (e) {
         _errorstate = true;
       } finally {
@@ -232,7 +236,7 @@ class TokenScreenState extends State<TokenScreen> {
   Future<void> getMarkets(int id) {
     return WebClient().getMarkets(id).then((value) {
       setState(() {
-        _markets = value;
+        _markets = value as List<Market>;
         _topMarkets = value.sublist(0, 5);
       });
     });
@@ -316,7 +320,7 @@ class TokenScreenState extends State<TokenScreen> {
                             itemCount: _topMarkets.length,
                             itemBuilder: (BuildContext context, int index) {
                               return Text(
-                                "${_topMarkets[index].name}: \$${_topMarkets[index].priceUsd}",
+                                "${_topMarkets[index].name}: \$${_topMarkets[index].price_usd}",
                                 style: TextStyle(fontSize: 16),
                                 maxLines: 1,
                                 softWrap: false,
@@ -364,9 +368,9 @@ class MarketsScreenState extends State<MarketsScreen> {
         _visibleMarkets.sort(
             (m1, m2) => m2.name.toLowerCase().compareTo(m1.name.toLowerCase()));
       case 'Price ↓':
-        _visibleMarkets.sort((m1, m2) => (m1.priceUsd - m2.priceUsd).toInt());
+        _visibleMarkets.sort((m1, m2) => (m1.price_usd - m2.price_usd).toInt());
       case 'Price ↑':
-        _visibleMarkets.sort((m1, m2) => (m2.priceUsd - m1.priceUsd).toInt());
+        _visibleMarkets.sort((m1, m2) => (m2.price_usd - m1.price_usd).toInt());
     }
   }
 
@@ -392,7 +396,8 @@ class MarketsScreenState extends State<MarketsScreen> {
     _sortType = _sortTypeList.first;
     _allMarkets = widget._initMarkets;
     _quoteType = quoteTypeList.first;
-    quoteTypeList.addAll(_allMarkets.map((market) => market.quote).toSet());
+    quoteTypeList
+        .addAll(_allMarkets.map((market) => market.quote.toString()).toSet());
     _visibleMarkets = widget._initMarkets;
   }
 
@@ -500,7 +505,7 @@ class MarketsScreenState extends State<MarketsScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "\$${_visibleMarkets[index].priceUsd}",
+                            "\$${_visibleMarkets[index].price_usd}",
                             maxLines: 1,
                           ),
                         ),
@@ -532,140 +537,49 @@ class Token {
   final dynamic csupply;
   final dynamic tsupply;
   final dynamic msupply;
-  Token(
-      {required this.id,
-      required this.symbol,
-      required this.name,
-      required this.rank,
-      required this.price_usd,
-      required this.percent_change_24h,
-      required this.percent_change_1h,
-      required this.percent_change_7d,
-      required this.price_btc,
-      required this.market_cap_usd,
-      required this.volume24,
-      required this.volume24a,
-      required this.csupply,
-      required this.tsupply,
-      required this.msupply});
+  Token({
+    required this.id,
+    required this.symbol,
+    required this.name,
+    required this.rank,
+    required this.price_usd,
+    required this.percent_change_24h,
+    required this.percent_change_1h,
+    required this.percent_change_7d,
+    required this.price_btc,
+    required this.market_cap_usd,
+    required this.volume24,
+    required this.volume24a,
+    required this.csupply,
+    required this.tsupply,
+    required this.msupply,
+  });
   factory Token.fromJson(Map<String, dynamic> json) => _$TokenFromJson(json);
   Map<String, dynamic> toJson() => _$TokenToJson(this);
-  /*
-  factory Token.ffromJson(Map<String, dynamic> json) {
-    return Token(
-      id: int.parse(json['id']),
-      symbol: json['symbol'],
-      name: json['name'],
-      rank: json['rank'],
-      priceUsd: double.parse(json['price_usd']),
-      percentChange24h: double.parse(json['percent_change_24h']),
-      percentChange1h: double.parse(json['percent_change_1h']),
-      percentChange7d: double.parse(json['percent_change_7d']),
-      priceBtc: double.parse(json['price_btc']),
-      marketCapUsd: double.tryParse(json['market_cap_usd']) ?? 0,
-      volume24: (json['volume24'] ?? 0).toDouble(),
-      volume24a: (json['volume24a'] ?? 0).toDouble(),
-      csupply: json['csupply'],
-      tsupply: json['tsupply'],
-      msupply: json['msupply'],
-    );
-  }*/ /*
-  Map<String, dynamic> toMap() {
-    return {
-      'ID': id,
-      'Symbol': symbol,
-      'Name': name,
-      'Rank': rank,
-      'Price (USD)': priceUsd,
-      'Percent change (24h)': percentChange24h,
-      'Percent change (1h)': percentChange1h,
-      'Percent change (7d)': percentChange7d,
-      'Price (BTC)': priceBtc,
-      'Marketcap (USD)': marketCapUsd,
-      'Volume (24h in USD)': volume24,
-      'Volume (24h in coins)': volume24a,
-      'Circulating Supply': csupply,
-      'Total Supply': tsupply,
-      'Maximum Supply': msupply ?? "-",
-    };
-  }*/
 }
 
+@JsonSerializable()
 class Market {
-  final String name;
-  final String base;
-  final String quote;
-  final double price;
-  final double priceUsd;
-  final double volume;
-  final double volumeUsd;
-  final double time;
-  Market(
-      {required this.name,
-      required this.base,
-      required this.quote,
-      required this.price,
-      required this.priceUsd,
-      required this.volume,
-      required this.volumeUsd,
-      required this.time});
-  factory Market.fromJson(Map<String, dynamic> json) {
-    return Market(
-      name: json['name'] ?? "",
-      base: json['base'] ?? "",
-      quote: json['quote'] ?? "",
-      price: json['price']?.toDouble() ?? 0,
-      priceUsd: json['price_usd']?.toDouble() ?? 0,
-      volume: json['volume']?.toDouble() ?? 0,
-      volumeUsd: json['volume_usd']?.toDouble() ?? 0,
-      time: json['time']?.toDouble() ?? 0,
-    );
-  }
-}
-
-abstract interface class IWebClient {
-  Future<List<Token>> getRating(int start, int limit);
-  Future<List<Market>> getMarkets(int id);
-}
-
-class WebClient implements IWebClient {
-  final dio = Dio();
-  WebClient();
-
-  @override
-  Future<List<Token>> getRating(int start, int limit) async {
-    try {
-      final response = await dio.postUri(
-        Uri.https('api.coinlore.net', '/api/tickers/', {
-          'start': start.toString(),
-          'limit': limit.toString(),
-        }),
-      );
-      final data = response.data['data'] as List<dynamic>;
-      return data.map((x) => Token.fromJson(x)).toList();
-    } catch (e) {
-      print("token: $e");
-      return [];
-    } finally {
-      dio.close();
-    }
-  }
-
-  @override
-  Future<List<Market>> getMarkets(int id) async {
-    try {
-      final response = await dio
-          .postUri(Uri.https('api.coinlore.net', '/api/coin/markets/', {
-        'id': id.toString(),
-      }));
-      final data = response.data as List<dynamic>;
-      return data.cast<Map<String, dynamic>>().map(Market.fromJson).toList();
-    } catch (e) {
-      return [];
-    } finally {
-      dio.close();
-    }
-  }
+  final dynamic name;
+  final dynamic base;
+  final dynamic quote;
+  final dynamic price;
+  final dynamic price_usd;
+  final dynamic volume;
+  final dynamic volume_usd;
+  final dynamic time;
+  Market({
+    required this.name,
+    required this.base,
+    required this.quote,
+    required this.price,
+    required this.price_usd,
+    required this.volume,
+    required this.volume_usd,
+    required this.time,
+  });
+  factory Market.fromJson(Map<String, dynamic> json) => _$MarketFromJson(json);
+  Map<String, dynamic> toJson() => _$MarketToJson(this);
 }
 
 FlTitlesData get tData => FlTitlesData(
@@ -701,4 +615,83 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
     space: 10,
     child: text,
   );
+}
+
+class DioInterceptor extends Interceptor {
+  File file = File(".cashe");
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    file.writeAsString(
+      '${DateTime.now()} REQUEST[${options.method}] => PATH: ${options.path}\n',
+      mode: FileMode.append,
+    );
+    super.onRequest(options, handler);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    file.writeAsString(
+      '${DateTime.now()} RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}\n',
+      mode: FileMode.append,
+    );
+    super.onResponse(response, handler);
+  }
+
+  @override
+  Future onError(DioException err, ErrorInterceptorHandler handler) async {
+    file.writeAsString(
+      '${DateTime.now()} ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}\n',
+      mode: FileMode.append,
+    );
+    super.onError(err, handler);
+  }
+}
+
+abstract interface class IWebClient {
+  Future<List<dynamic>> getRating(int start, int limit);
+  Future<List<dynamic>> getMarkets(int id);
+}
+
+class WebClient implements IWebClient {
+  final dio = Dio();
+  WebClient() {
+    dio.interceptors.add(DioInterceptor());
+  }
+
+  @override
+  Future<List<dynamic>> getRating(int start, int limit) async {
+    try {
+      final response = await dio.postUri(
+        Uri.https('api.coinlore.net', '/api/tickers/', {
+          'start': start.toString(),
+          'limit': limit.toString(),
+        }),
+      );
+      final data = response.data['data'] as List<dynamic>;
+      return data.cast<Map<String, dynamic>>().map(Token.fromJson).toList();
+    } catch (e) {
+      print(e);
+      return [];
+    } finally {
+      dio.close();
+    }
+  }
+
+  @override
+  Future<List<dynamic>> getMarkets(int id) async {
+    try {
+      final response = await dio
+          .postUri(Uri.https('api.coinlore.net', '/api/coin/markets/', {
+        'id': id.toString(),
+      }));
+      final data = response.data as List<dynamic>;
+      return data.cast<Map<String, dynamic>>().map(Market.fromJson).toList();
+    } catch (e) {
+      print(e);
+      return [];
+    } finally {
+      dio.close();
+    }
+  }
 }
