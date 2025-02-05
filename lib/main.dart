@@ -1,23 +1,24 @@
+import 'package:cryptomarket_app/webclient.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'package:dio/dio.dart';
-import 'dart:io';
-
-//import 'injectable.dart';
-
-part 'main.g.dart';
+import 'injectable.dart';
+import 'dataclasses.dart';
+import 'package:get_it/get_it.dart';
 
 void main() {
-  //configureDependencies();
-  runApp(const MyApp());
+  configureDependencies();
+  IWebClient webClient = GetIt.I<IWebClient>();
+  runApp(MyApp(
+    webClient: webClient,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final IWebClient webClient;
+  const MyApp({required this.webClient, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +27,17 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scrollBehavior: const MaterialScrollBehavior()
           .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
-      home: HomeScreen(),
+      home: HomeScreen(
+        webClient: webClient,
+      ),
     );
   }
 }
 
 class HomeScreen extends StatefulWidget {
   final _limit = 20;
-  const HomeScreen({super.key});
+  final IWebClient webClient;
+  const HomeScreen({required this.webClient, super.key});
   @override
   HomeScreenState createState() => HomeScreenState();
 }
@@ -61,9 +65,11 @@ class HomeScreenState extends State<HomeScreen> {
       });
 
       try {
-        final rating = await WebClient().getRating(_start, widget._limit);
-
-        _tokenList = rating as List<Token>;
+        await widget.webClient
+            .getRating(_start, widget._limit)
+            .then((x) => setState(() {
+                  _tokenList = x;
+                }));
       } catch (e) {
         _errorstate = true;
       } finally {
@@ -163,8 +169,10 @@ class HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                TokenScreen(_tokenList[index], null),
+                            builder: (context) => TokenScreen(
+                              webClient: widget.webClient,
+                              token: _tokenList[index],
+                            ),
                           ));
                     },
                   );
@@ -177,7 +185,8 @@ class HomeScreenState extends State<HomeScreen> {
 }
 
 class TokenScreen extends StatefulWidget {
-  const TokenScreen(this.token, Key? key) : super(key: key);
+  final IWebClient webClient;
+  const TokenScreen({required this.webClient, required this.token, super.key});
   final Token token;
 
   @override
@@ -234,10 +243,10 @@ class TokenScreenState extends State<TokenScreen> {
   }
 
   Future<void> getMarkets(int id) {
-    return WebClient().getMarkets(id).then((value) {
+    return widget.webClient.getMarkets(id).then((value) {
       setState(() {
-        _markets = value as List<Market>;
-        _topMarkets = value.sublist(0, 5);
+        _markets = value;
+        _topMarkets = _markets.sublist(0, 5);
       });
     });
   }
@@ -320,7 +329,7 @@ class TokenScreenState extends State<TokenScreen> {
                             itemCount: _topMarkets.length,
                             itemBuilder: (BuildContext context, int index) {
                               return Text(
-                                "${_topMarkets[index].name}: \$${_topMarkets[index].price_usd}",
+                                "${_topMarkets[index].name}: \$${_topMarkets[index].priceUsd}",
                                 style: TextStyle(fontSize: 16),
                                 maxLines: 1,
                                 softWrap: false,
@@ -368,9 +377,9 @@ class MarketsScreenState extends State<MarketsScreen> {
         _visibleMarkets.sort(
             (m1, m2) => m2.name.toLowerCase().compareTo(m1.name.toLowerCase()));
       case 'Price ↓':
-        _visibleMarkets.sort((m1, m2) => (m1.price_usd - m2.price_usd).toInt());
+        _visibleMarkets.sort((m1, m2) => (m1.priceUsd - m2.priceUsd).toInt());
       case 'Price ↑':
-        _visibleMarkets.sort((m1, m2) => (m2.price_usd - m1.price_usd).toInt());
+        _visibleMarkets.sort((m1, m2) => (m2.priceUsd - m1.priceUsd).toInt());
     }
   }
 
@@ -505,7 +514,7 @@ class MarketsScreenState extends State<MarketsScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "\$${_visibleMarkets[index].price_usd}",
+                            "\$${_visibleMarkets[index].priceUsd}",
                             maxLines: 1,
                           ),
                         ),
@@ -518,68 +527,6 @@ class MarketsScreenState extends State<MarketsScreen> {
           )),
     );
   }
-}
-
-@JsonSerializable()
-class Token {
-  final String id;
-  final String symbol;
-  final String name;
-  final int rank;
-  final String price_usd;
-  final String percent_change_24h;
-  final String percent_change_1h;
-  final String percent_change_7d;
-  final String price_btc;
-  final String market_cap_usd;
-  final dynamic volume24;
-  final dynamic volume24a;
-  final dynamic csupply;
-  final dynamic tsupply;
-  final dynamic msupply;
-  Token({
-    required this.id,
-    required this.symbol,
-    required this.name,
-    required this.rank,
-    required this.price_usd,
-    required this.percent_change_24h,
-    required this.percent_change_1h,
-    required this.percent_change_7d,
-    required this.price_btc,
-    required this.market_cap_usd,
-    required this.volume24,
-    required this.volume24a,
-    required this.csupply,
-    required this.tsupply,
-    required this.msupply,
-  });
-  factory Token.fromJson(Map<String, dynamic> json) => _$TokenFromJson(json);
-  Map<String, dynamic> toJson() => _$TokenToJson(this);
-}
-
-@JsonSerializable()
-class Market {
-  final dynamic name;
-  final dynamic base;
-  final dynamic quote;
-  final dynamic price;
-  final dynamic price_usd;
-  final dynamic volume;
-  final dynamic volume_usd;
-  final dynamic time;
-  Market({
-    required this.name,
-    required this.base,
-    required this.quote,
-    required this.price,
-    required this.price_usd,
-    required this.volume,
-    required this.volume_usd,
-    required this.time,
-  });
-  factory Market.fromJson(Map<String, dynamic> json) => _$MarketFromJson(json);
-  Map<String, dynamic> toJson() => _$MarketToJson(this);
 }
 
 FlTitlesData get tData => FlTitlesData(
@@ -615,83 +562,4 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
     space: 10,
     child: text,
   );
-}
-
-class DioInterceptor extends Interceptor {
-  File file = File(".cashe");
-
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    file.writeAsString(
-      '${DateTime.now()} REQUEST[${options.method}] => PATH: ${options.path}\n',
-      mode: FileMode.append,
-    );
-    super.onRequest(options, handler);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    file.writeAsString(
-      '${DateTime.now()} RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}\n',
-      mode: FileMode.append,
-    );
-    super.onResponse(response, handler);
-  }
-
-  @override
-  Future onError(DioException err, ErrorInterceptorHandler handler) async {
-    file.writeAsString(
-      '${DateTime.now()} ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}\n',
-      mode: FileMode.append,
-    );
-    super.onError(err, handler);
-  }
-}
-
-abstract interface class IWebClient {
-  Future<List<dynamic>> getRating(int start, int limit);
-  Future<List<dynamic>> getMarkets(int id);
-}
-
-class WebClient implements IWebClient {
-  final dio = Dio();
-  WebClient() {
-    dio.interceptors.add(DioInterceptor());
-  }
-
-  @override
-  Future<List<dynamic>> getRating(int start, int limit) async {
-    try {
-      final response = await dio.postUri(
-        Uri.https('api.coinlore.net', '/api/tickers/', {
-          'start': start.toString(),
-          'limit': limit.toString(),
-        }),
-      );
-      final data = response.data['data'] as List<dynamic>;
-      return data.cast<Map<String, dynamic>>().map(Token.fromJson).toList();
-    } catch (e) {
-      print(e);
-      return [];
-    } finally {
-      dio.close();
-    }
-  }
-
-  @override
-  Future<List<dynamic>> getMarkets(int id) async {
-    try {
-      final response = await dio
-          .postUri(Uri.https('api.coinlore.net', '/api/coin/markets/', {
-        'id': id.toString(),
-      }));
-      final data = response.data as List<dynamic>;
-      return data.cast<Map<String, dynamic>>().map(Market.fromJson).toList();
-    } catch (e) {
-      print(e);
-      return [];
-    } finally {
-      dio.close();
-    }
-  }
 }

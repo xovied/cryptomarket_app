@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'main.dart';
+part of 'dataclasses.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -11,12 +11,12 @@ Token _$TokenFromJson(Map<String, dynamic> json) => Token(
       symbol: json['symbol'] as String,
       name: json['name'] as String,
       rank: (json['rank'] as num).toInt(),
-      price_usd: json['price_usd'] as String,
-      percent_change_24h: json['percent_change_24h'] as String,
-      percent_change_1h: json['percent_change_1h'] as String,
-      percent_change_7d: json['percent_change_7d'] as String,
-      price_btc: json['price_btc'] as String,
-      market_cap_usd: json['market_cap_usd'] as String,
+      priceUsd: json['price_usd'] as String,
+      percentChange24h: json['percent_change_24h'] as String,
+      percentChange1h: json['percent_change_1h'] as String,
+      percentChange7d: json['percent_change_7d'] as String,
+      priceBtc: json['price_btc'] as String,
+      marketCapUsd: json['market_cap_usd'] as String,
       volume24: json['volume24'],
       volume24a: json['volume24a'],
       csupply: json['csupply'],
@@ -29,12 +29,12 @@ Map<String, dynamic> _$TokenToJson(Token instance) => <String, dynamic>{
       'symbol': instance.symbol,
       'name': instance.name,
       'rank': instance.rank,
-      'price_usd': instance.price_usd,
-      'percent_change_24h': instance.percent_change_24h,
-      'percent_change_1h': instance.percent_change_1h,
-      'percent_change_7d': instance.percent_change_7d,
-      'price_btc': instance.price_btc,
-      'market_cap_usd': instance.market_cap_usd,
+      'price_usd': instance.priceUsd,
+      'percent_change_24h': instance.percentChange24h,
+      'percent_change_1h': instance.percentChange1h,
+      'percent_change_7d': instance.percentChange7d,
+      'price_btc': instance.priceBtc,
+      'market_cap_usd': instance.marketCapUsd,
       'volume24': instance.volume24,
       'volume24a': instance.volume24a,
       'csupply': instance.csupply,
@@ -47,9 +47,9 @@ Market _$MarketFromJson(Map<String, dynamic> json) => Market(
       base: json['base'],
       quote: json['quote'],
       price: json['price'],
-      price_usd: json['price_usd'],
+      priceUsd: json['price_usd'],
       volume: json['volume'],
-      volume_usd: json['volume_usd'],
+      volumeUsd: json['volume_usd'],
       time: json['time'],
     );
 
@@ -58,8 +58,8 @@ Map<String, dynamic> _$MarketToJson(Market instance) => <String, dynamic>{
       'base': instance.base,
       'quote': instance.quote,
       'price': instance.price,
-      'price_usd': instance.price_usd,
+      'price_usd': instance.priceUsd,
       'volume': instance.volume,
-      'volume_usd': instance.volume_usd,
+      'volume_usd': instance.volumeUsd,
       'time': instance.time,
     };
