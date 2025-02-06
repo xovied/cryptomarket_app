@@ -37,6 +37,14 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    flavorDimensions += "ru"
+
+    productFlavors {
+        create("ru") {
+            dimension = "default"
+        }
+    }
 }
 
 flutter {

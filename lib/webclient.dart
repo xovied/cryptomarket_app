@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'dataclasses.dart';
 
-//import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-//import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 
 abstract class IWebClient {
   Future<List<Token>> getRating(int start, int limit);
@@ -15,7 +15,24 @@ abstract class IWebClient {
 @Injectable(as: IWebClient)
 class WebClient implements IWebClient {
   final dio = Dio();
-  WebClient();
+  late CacheStore cacheStore;
+  WebClient() {
+    dio.interceptors.add(DioInterceptor());
+
+    getApplicationCacheDirectory().then((dir) {
+      cacheStore = FileCacheStore(dir.path);
+
+      var cacheOptions = CacheOptions(
+        store: cacheStore,
+        keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+        allowPostMethod: true,
+      );
+
+      dio.interceptors.add(
+        DioCacheInterceptor(options: cacheOptions),
+      );
+    });
+  }
 
   @override
   Future<List<Token>> getRating(int start, int limit) async {
@@ -28,7 +45,9 @@ class WebClient implements IWebClient {
       );
       final data = response.data['data'] as List<dynamic>;
       return data.cast<Map<String, dynamic>>().map(Token.fromJson).toList();
-    } finally {}
+    } catch (e) {
+      throw (Exception());
+    }
   }
 
   @override
@@ -39,8 +58,11 @@ class WebClient implements IWebClient {
         'id': id.toString(),
       }));
       final data = response.data as List<dynamic>;
+      print(response.extra);
       return data.cast<Map<String, dynamic>>().map(Market.fromJson).toList();
-    } finally {}
+    } catch (e) {
+      return [];
+    }
   }
 }
 
@@ -53,6 +75,10 @@ class CacheStorage {
   Future<File> get _localLogFile async {
     final path = await _localPath;
     return File('$path/crypto_log.txt');
+  }
+
+  Future<String> getPath() {
+    return _localPath;
   }
 
   Future<File> writeLog(String s) async {

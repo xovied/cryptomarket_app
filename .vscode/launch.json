@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ru",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_development.dart",
+            "args": [
+                "--flavor",
+                "ru",
+                "--target",
+                "lib/main_ru.dart"
+            ]
+        }
+    ],
+    "compounds": []
+}

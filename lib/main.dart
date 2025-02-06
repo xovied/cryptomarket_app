@@ -10,15 +10,14 @@ import 'package:get_it/get_it.dart';
 
 void main() {
   configureDependencies();
-  IWebClient webClient = GetIt.I<IWebClient>();
   runApp(MyApp(
-    webClient: webClient,
+    getIt: getIt,
   ));
 }
 
 class MyApp extends StatelessWidget {
-  final IWebClient webClient;
-  const MyApp({required this.webClient, super.key});
+  final GetIt getIt;
+  const MyApp({required this.getIt, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
       scrollBehavior: const MaterialScrollBehavior()
           .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
       home: HomeScreen(
-        webClient: webClient,
+        getIt: getIt,
       ),
     );
   }
@@ -36,8 +35,8 @@ class MyApp extends StatelessWidget {
 
 class HomeScreen extends StatefulWidget {
   final _limit = 20;
-  final IWebClient webClient;
-  const HomeScreen({required this.webClient, super.key});
+  final GetIt getIt;
+  const HomeScreen({required this.getIt, super.key});
   @override
   HomeScreenState createState() => HomeScreenState();
 }
@@ -47,12 +46,14 @@ class HomeScreenState extends State<HomeScreen> {
   bool _loadingstate = false;
   bool _errorstate = false;
   int _start = 0;
+  IWebClient? webClient;
 
   update(int i, List<Token> value) {}
 
   @override
   initState() {
     super.initState();
+    webClient = widget.getIt.get<IWebClient>();
     getRating(0);
   }
 
@@ -65,11 +66,11 @@ class HomeScreenState extends State<HomeScreen> {
       });
 
       try {
-        await widget.webClient
-            .getRating(_start, widget._limit)
-            .then((x) => setState(() {
-                  _tokenList = x;
-                }));
+        await webClient!.getRating(_start, widget._limit).then((x) => {
+              setState(() {
+                _tokenList = x;
+              })
+            });
       } catch (e) {
         _errorstate = true;
       } finally {
@@ -170,7 +171,7 @@ class HomeScreenState extends State<HomeScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => TokenScreen(
-                              webClient: widget.webClient,
+                              getIt: widget.getIt,
                               token: _tokenList[index],
                             ),
                           ));
@@ -185,8 +186,8 @@ class HomeScreenState extends State<HomeScreen> {
 }
 
 class TokenScreen extends StatefulWidget {
-  final IWebClient webClient;
-  const TokenScreen({required this.webClient, required this.token, super.key});
+  final GetIt getIt;
+  const TokenScreen({required this.getIt, required this.token, super.key});
   final Token token;
 
   @override
@@ -202,10 +203,12 @@ class TokenScreenState extends State<TokenScreen> {
   late double _price, _p7d, _p24h;
   dynamic _spots;
   dynamic _maxY, _minY;
+  IWebClient? webClient;
 
   @override
   initState() {
     super.initState();
+    webClient = getIt.get<IWebClient>();
     getMarkets(int.parse(widget.token.id));
     _tokenMap = widget.token.toJson();
     _price = double.parse(_tokenMap['price_usd']);
@@ -242,11 +245,11 @@ class TokenScreenState extends State<TokenScreen> {
     _minY = _minY < minyy ? _minY : minyy;
   }
 
-  Future<void> getMarkets(int id) {
-    return widget.webClient.getMarkets(id).then((value) {
+  Future<void> getMarkets(int id) async {
+    await webClient!.getMarkets(id).then((value) {
       setState(() {
         _markets = value;
-        _topMarkets = _markets.sublist(0, 5);
+        _topMarkets = _markets.isEmpty ? [] : _markets.sublist(0, 5);
       });
     });
   }
