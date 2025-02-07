@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:injectable/injectable.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'dataclasses.dart';
-
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'package:injectable/injectable.dart';
+import 'dart:io';
+import 'dataclasses.dart';
 
 abstract class IWebClient {
   Future<List<Token>> getRating(int start, int limit);
@@ -13,18 +13,19 @@ abstract class IWebClient {
 }
 
 @Injectable(as: IWebClient)
-class WebClient implements IWebClient {
-  final dio = Dio();
-  late CacheStore cacheStore;
-  WebClient() {
+class DioClient implements IWebClient {
+  Dio dio = Dio();
+  DioClient() {
     dio.interceptors.add(DioInterceptor());
+    late CacheStore cacheStore;
 
     getApplicationCacheDirectory().then((dir) {
       cacheStore = FileCacheStore(dir.path);
 
       var cacheOptions = CacheOptions(
+        policy: CachePolicy.refreshForceCache,
         store: cacheStore,
-        keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+        hitCacheOnErrorExcept: [],
         allowPostMethod: true,
       );
 
@@ -44,6 +45,7 @@ class WebClient implements IWebClient {
         }),
       );
       final data = response.data['data'] as List<dynamic>;
+      print("1!${response.statusCode}: ${response.extra}");
       return data.cast<Map<String, dynamic>>().map(Token.fromJson).toList();
     } catch (e) {
       throw (Exception());
@@ -53,14 +55,17 @@ class WebClient implements IWebClient {
   @override
   Future<List<Market>> getMarkets(int id) async {
     try {
-      final response = await dio
-          .postUri(Uri.https('api.coinlore.net', '/api/coin/markets/', {
-        'id': id.toString(),
-      }));
+      final response = await dio.postUri(
+        Uri.https('api.coinlore.net', '/api/coin/markets/', {
+          'id': id.toString(),
+        }),
+      );
       final data = response.data as List<dynamic>;
-      print(response.extra);
+
+      print("2!${response.statusCode}: ${response.extra}");
       return data.cast<Map<String, dynamic>>().map(Market.fromJson).toList();
     } catch (e) {
+      print(e);
       return [];
     }
   }

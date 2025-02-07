@@ -36,13 +36,16 @@ dependencies:
   cupertino_icons: ^1.0.8
   fl_chart: ^0.70.2
   json_annotation: ^4.9.0
-  intl: ^0.20.2
+  intl: 
   dio: ^5.8.0+1
   injectable: ^2.5.0
   get_it: ^8.0.3
   path_provider: ^2.1.5
   dio_cache_interceptor_file_store: ^1.2.3
   dio_cache_interceptor: ^3.5.1
+  after_layout: ^1.2.0
+  flutter_localization:
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:

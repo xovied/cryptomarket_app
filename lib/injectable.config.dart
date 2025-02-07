@@ -12,7 +12,7 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
-import 'webclient.dart' as _i313;
+import 'dioclient.dart' as _i861;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -25,7 +25,7 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
-    gh.factory<_i313.IWebClient>(() => _i313.WebClient());
+    gh.factory<_i861.IWebClient>(() => _i861.DioClient());
     return this;
   }
 }

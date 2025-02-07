@@ -5,12 +5,24 @@
             "name": "ru",
             "request": "launch",
             "type": "dart",
-            "program": "lib/main_development.dart",
+            "program": "lib/main.dart",
             "args": [
                 "--flavor",
                 "ru",
                 "--target",
                 "lib/main_ru.dart"
+            ]
+        },
+        {
+            "name": "en",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "en",
+                "--target",
+                "lib/main_en.dart"
             ]
         }
     ],

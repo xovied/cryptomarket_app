@@ -1,23 +1,63 @@
-import 'package:cryptomarket_app/webclient.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'injectable.dart';
 import 'dataclasses.dart';
 import 'package:get_it/get_it.dart';
+import 'package:after_layout/after_layout.dart';
+import 'dioclient.dart';
+import 'app_locale.dart';
 
-void main() {
+enum Language { ru, en }
+
+Future<void> main(List<String> args, Language lang) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FlutterLocalization.instance.ensureInitialized();
+
   configureDependencies();
   runApp(MyApp(
+    lang: lang,
     getIt: getIt,
   ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final GetIt getIt;
-  const MyApp({required this.getIt, super.key});
+  final Language lang;
+  const MyApp({required this.lang, required this.getIt, super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final FlutterLocalization _localization = FlutterLocalization.instance;
+
+  @override
+  void initState() {
+    _localization.init(
+      mapLocales: [
+        const MapLocale(
+          'en',
+          AppLocale.en,
+        ),
+        const MapLocale(
+          'ru',
+          AppLocale.ru,
+        ),
+      ],
+      initLanguageCode: widget.lang.name,
+    );
+    _localization.onTranslatedLanguage = _onTranslatedLanguage;
+    super.initState();
+  }
+
+  void _onTranslatedLanguage(Locale? locale) {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +81,9 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen>
+    with AfterLayoutMixin<HomeScreen> {
+  final FlutterLocalization _localization = FlutterLocalization.instance;
   List<Token> _tokenList = [];
   bool _loadingstate = false;
   bool _errorstate = false;
@@ -54,6 +96,10 @@ class HomeScreenState extends State<HomeScreen> {
   initState() {
     super.initState();
     webClient = widget.getIt.get<IWebClient>();
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
     getRating(0);
   }
 
@@ -194,7 +240,8 @@ class TokenScreen extends StatefulWidget {
   TokenScreenState createState() => TokenScreenState();
 }
 
-class TokenScreenState extends State<TokenScreen> {
+class TokenScreenState extends State<TokenScreen>
+    with AfterLayoutMixin<TokenScreen> {
   List<double>? _rList;
   final Random _rng = Random();
   List<Market> _markets = [];
@@ -209,7 +256,6 @@ class TokenScreenState extends State<TokenScreen> {
   initState() {
     super.initState();
     webClient = getIt.get<IWebClient>();
-    getMarkets(int.parse(widget.token.id));
     _tokenMap = widget.token.toJson();
     _price = double.parse(_tokenMap['price_usd']);
     _p7d = double.parse(_tokenMap['percent_change_7d']) / 100;
@@ -243,6 +289,11 @@ class TokenScreenState extends State<TokenScreen> {
     _minY = _price * (1 - max(_p24h.abs(), _p7d.abs()) - 0.05);
     final minyy = min(_price / (1 + _p24h), _price / (1 + _p7d));
     _minY = _minY < minyy ? _minY : minyy;
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    getMarkets(int.parse(widget.token.id));
   }
 
   Future<void> getMarkets(int id) async {

@@ -38,13 +38,25 @@ android {
         }
     }
 
-    flavorDimensions += "ru"
+    android {
+    // ...
+    flavorDimensions += "lang"
 
     productFlavors {
         create("ru") {
-            dimension = "default"
+            dimension = "lang"
+            applicationIdSuffix = ".ru"
+            manifestPlaceholders = [appName: "RU market"]
         }
     }
+    productFlavors {
+        create("en") {
+            dimension = "lang"
+            applicationIdSuffix = ".en"
+            manifestPlaceholders = [appName: "EN market"]
+        }
+    }
+}
 }
 
 flutter {
