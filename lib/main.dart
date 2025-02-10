@@ -102,7 +102,7 @@ class HomeScreenState extends State<HomeScreen>
 
   @override
   void afterFirstLayout(BuildContext context) {
-    getRating(0);
+    Future.delayed(Duration(milliseconds: 100), () => getRating(0));
   }
 
   Future<void> getRating(int i) async {
@@ -305,7 +305,8 @@ class TokenScreenState extends State<TokenScreen>
 
   @override
   void afterFirstLayout(BuildContext context) {
-    getMarkets(int.parse(widget.token.id));
+    Future.delayed(Duration(milliseconds: 100),
+        () => getMarkets(int.parse(widget.token.id)));
   }
 
   Future<void> getMarkets(int id) async {
