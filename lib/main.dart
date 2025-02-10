@@ -62,6 +62,8 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      supportedLocales: _localization.supportedLocales,
+      localizationsDelegates: _localization.localizationsDelegates,
       theme: ThemeData(brightness: Brightness.dark),
       debugShowCheckedModeBanner: false,
       scrollBehavior: const MaterialScrollBehavior()
@@ -180,14 +182,24 @@ class HomeScreenState extends State<HomeScreen>
             child: Row(children: [
               Expanded(
                 flex: 2,
-                child: Text("Token rating", style: TextStyle(fontSize: 22)),
+                child: Image.asset(
+                  AppLocale.icon.getString(context),
+                ),
               ),
               Expanded(
-                flex: 1,
+                flex: 8,
+                child: Align(
+                  alignment: Alignment(-0.1, 0),
+                  child: Text(AppLocale.homeTitle.getString(context),
+                      style: TextStyle(fontSize: 20)),
+                ),
+              ),
+              Expanded(
+                flex: 3,
                 child: prevButton(),
               ),
               Expanded(
-                flex: 1,
+                flex: 3,
                 child: nextButton(),
               ),
             ]),
@@ -310,7 +322,8 @@ class TokenScreenState extends State<TokenScreen>
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.indigoAccent,
-          title: Text("Token info", style: TextStyle(fontSize: 22)),
+          title: Text(AppLocale.tokenTitle.getString(context),
+              style: TextStyle(fontSize: 22)),
         ),
         body: RefreshIndicator(
             onRefresh: () async {
@@ -469,7 +482,8 @@ class MarketsScreenState extends State<MarketsScreen> {
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Colors.indigoAccent,
-          title: Text("Markets for ${widget._token.name}")),
+          title: Text(
+              "${AppLocale.marketTitle.getString(context)}${widget._token.name}")),
       body: Container(
           padding: EdgeInsets.all(8),
           width: 350,
